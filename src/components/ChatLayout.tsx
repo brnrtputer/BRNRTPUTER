@@ -254,7 +254,7 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
     setInputValue('');
   };
 
-  const handleImageGeneration = async (prompt: string, skipUserMessage = false) => {
+  const handleImageGeneration = async (prompt: string, skipUserMessage = false, chatId?: string) => {
     // Only add user message if not already added
     if (!skipUserMessage) {
       const userMsg: Message = {
@@ -263,7 +263,7 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
         timestamp: getTimestamp()
       };
       setMessages(prev => [...prev, userMsg]);
-      await saveMessage(userMsg);
+      await saveMessage(userMsg, chatId);
     }
 
     setIsAnalyzing(true);
@@ -279,7 +279,10 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
       const response = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ 
+          prompt,
+          walletAddress // Pass wallet address so server can save to correct folder
+        }),
       });
 
       if (!response.ok) {
@@ -288,18 +291,19 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
 
       const data = await response.json();
 
+      // Server has already downloaded and saved the image permanently
       // Remove "Generating..." message and add generated image
       setMessages(prev => prev.slice(0, -1));
       
       const assistantMsg: Message = {
         role: 'assistant',
         content: data.revisedPrompt || data.originalPrompt,
-        generatedImage: data.imageUrl,
+        generatedImage: data.imageUrl, // Already a permanent Supabase URL
         timestamp: getTimestamp()
       };
       
       setMessages(prev => [...prev, assistantMsg]);
-      await saveMessage(assistantMsg);
+      await saveMessage(assistantMsg, chatId);
 
       // Show saving status
       setIsAnalyzing(false);
@@ -362,7 +366,7 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
     // If in generate mode, directly generate image
     if (isGenerateMode) {
       setIsGenerateMode(false);
-      await handleImageGeneration(message);
+      await handleImageGeneration(message, false, chatIdToUse || undefined);
       return;
     }
 
@@ -405,7 +409,8 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
           setMessages(prev => prev.slice(0, -1));
           
           // Call image generation with skipUserMessage=true since user message already added
-          await handleImageGeneration(data.prompt || message, true);
+          // IMPORTANT: Pass chatIdToUse so message saves to correct chat!
+          await handleImageGeneration(data.prompt || message, true, chatIdToUse || undefined);
           return;
         }
       }

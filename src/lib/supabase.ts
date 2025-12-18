@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Storage bucket name
-export const STORAGE_BUCKET = 'brnrt';
+export const STORAGE_BUCKET = 'chat-images';
 
 // Database types
 export interface Chat {
