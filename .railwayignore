@@ -1,0 +1,8 @@
+# Ignore test directories from node_modules
+**/test/
+**/tests/
+**/__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts

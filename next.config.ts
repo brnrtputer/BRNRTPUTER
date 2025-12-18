@@ -4,11 +4,12 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'why-is-node-running': false,
-      'tape': false,
-    };
+    // Ignore test, bench, and example files from node_modules
+    config.module.rules.push({
+      test: /node_modules.*\/(test|bench|example).*\.(js|mjs|ts)$/,
+      loader: 'ignore-loader',
+    });
+    
     return config;
   },
 };

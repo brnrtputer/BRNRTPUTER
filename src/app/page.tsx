@@ -1,12 +1,12 @@
 'use client';
 
 import ChatLayout from "@/components/ChatLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { supabase, Chat } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function Home() {
+function HomeContent() {
   const { ready, authenticated, user } = usePrivy();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -95,5 +95,13 @@ export default function Home() {
         onChatCreated={handleChatCreated}
       />
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" style={{ background: '#18181b' }} />}>
+      <HomeContent />
+    </Suspense>
   );
 }

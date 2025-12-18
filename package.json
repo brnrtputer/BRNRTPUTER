@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start"
   },
   "dependencies": {
@@ -27,6 +27,9 @@
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tap": "^21.5.0",
+    "tape": "^5.9.0",
+    "typescript": "^5",
+    "why-is-node-running": "^3.2.2"
   }
 }
