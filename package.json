@@ -26,6 +26,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "ignore-loader": "^0.1.2",
     "tailwindcss": "^4",
     "tap": "^21.5.0",
     "tape": "^5.9.0",
