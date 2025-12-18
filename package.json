@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start"
   },
   "dependencies": {
@@ -15,7 +15,7 @@
     "@solana/kit": "^5.1.0",
     "@supabase/supabase-js": "^2.88.0",
     "lucide-react": "^0.561.0",
-    "next": "16.0.10",
+    "next": "^15.1.0",
     "openai": "^6.14.0",
     "react": "19.2.1",
     "react-dom": "19.2.1"
