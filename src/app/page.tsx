@@ -1,65 +1,99 @@
-import Image from "next/image";
+'use client';
+
+import ChatLayout from "@/components/ChatLayout";
+import { useState, useEffect } from "react";
+import { usePrivy } from "@privy-io/react-auth";
+import { supabase, Chat } from "@/lib/supabase";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Home() {
+  const { ready, authenticated, user } = usePrivy();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+  // Get wallet address when authenticated
+  useEffect(() => {
+    if (authenticated && user) {
+      const address = user.wallet?.address || (user.linkedAccounts?.[0] as any)?.address;
+      setWalletAddress(address || null);
+    } else {
+      setWalletAddress(null);
+    }
+  }, [authenticated, user]);
+
+  // Load chats when wallet address is available
+  useEffect(() => {
+    if (walletAddress) {
+      loadChats();
+    } else {
+      setChats([]);
+      setCurrentChatId(null);
+    }
+  }, [walletAddress]);
+
+  // Read chat ID from URL and handle both owned and external chats
+  useEffect(() => {
+    const chatIdFromUrl = searchParams.get('chat');
+    if (chatIdFromUrl) {
+      // Check if this chat exists in the user's loaded chats
+      const chatExists = chats.some(chat => chat.id === chatIdFromUrl);
+      if (chatExists) {
+        setCurrentChatId(chatIdFromUrl);
+      } else if (walletAddress) {
+        // Chat might belong to another user - still set it to view
+        setCurrentChatId(chatIdFromUrl);
+      }
+    }
+  }, [searchParams, chats, walletAddress]);
+
+  const loadChats = async () => {
+    if (!walletAddress) return;
+
+    const { data, error } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('wallet_address', walletAddress)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading chats:', error);
+      return;
+    }
+
+    setChats(data || []);
+  };
+
+  const handleNewChat = async () => {
+    // Just clear currentChatId - will create chat on first message
+    setCurrentChatId(null);
+    router.push('/');
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    setCurrentChatId(chatId);
+    router.push(`/?chat=${chatId}`);
+  };
+
+  const handleChatCreated = (chatId: string) => {
+    setCurrentChatId(chatId);
+    router.push(`/?chat=${chatId}`);
+    loadChats();
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen" style={{ background: '#18181b' }}>
+      <ChatLayout 
+        currentChatId={currentChatId}
+        walletAddress={walletAddress}
+        chats={chats}
+        onChatUpdate={loadChats}
+        onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+        onChatCreated={handleChatCreated}
+      />
+    </main>
   );
 }

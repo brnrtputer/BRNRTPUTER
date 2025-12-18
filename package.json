@@ -8,13 +8,21 @@
     "start": "next start"
   },
   "dependencies": {
+    "@privy-io/react-auth": "^3.9.0",
+    "@solana-program/memo": "^0.10.0",
+    "@solana-program/system": "^0.10.0",
+    "@solana-program/token": "^0.9.0",
+    "@solana/kit": "^5.1.0",
+    "@supabase/supabase-js": "^2.88.0",
+    "lucide-react": "^0.561.0",
     "next": "16.0.10",
+    "openai": "^6.14.0",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.27",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
