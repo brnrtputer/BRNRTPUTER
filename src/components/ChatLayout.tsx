@@ -773,7 +773,7 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
               </div>
             )}
             <a 
-              href="https://github.com" 
+              href="https://github.com/brnrtputer/BRNRTPUTER" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 rounded-md text-white text-xs hover:bg-zinc-700 transition-colors"
