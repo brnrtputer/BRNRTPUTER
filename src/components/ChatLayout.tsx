@@ -36,6 +36,7 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
   const [totalMessages, setTotalMessages] = useState<number | null>(null);
   const [loadingCount, setLoadingCount] = useState(true);
   const [currentChatOwner, setCurrentChatOwner] = useState<string | null>(null);
+  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(true);
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +57,9 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
   useEffect(() => {
     if (walletAddress) {
       loadMessageCount(true); // Show skeleton on initial load
+    } else {
+      // Don't show skeleton if not logged in, just load count directly
+      loadMessageCount(false);
     }
   }, [walletAddress]);
 
@@ -329,7 +333,7 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
   const handleSendMessage = async () => {
     // Require wallet connection
     if (!authenticated || !walletAddress) {
-      alert('Please connect your wallet to start chatting');
+      login(); // Show Privy login modal instead of alert
       return;
     }
 
@@ -493,7 +497,7 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
   const handleImageUpload = async (file: File) => {
     // Require wallet connection
     if (!authenticated || !walletAddress) {
-      alert('Please connect your wallet to upload images');
+      login(); // Show Privy login modal instead of alert
       return;
     }
 
@@ -515,7 +519,6 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
 
       if (error) {
         console.error('Error creating chat:', error);
-        alert('Failed to create chat');
         return;
       }
 
@@ -645,33 +648,42 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Show wallet connection prompt if not authenticated
-  if (!authenticated || !walletAddress) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <Image
-            src="/brnrtputer.png"
-            alt="Logo"
-            width={120}
-            height={120}
-            className="mx-auto mb-6"
-          />
-          <h2 className="text-white text-2xl mb-4 font-mono">Welcome to BRNRTPUTER</h2>
-          <p className="text-zinc-400 mb-6">Connect your wallet to start chatting</p>
-          <button 
-            onClick={login}
-            className="px-6 py-3 bg-zinc-800 rounded-lg text-white hover:bg-zinc-700 transition-colors cursor-pointer"
-          >
-            Connect Wallet
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full h-screen flex items-center justify-center p-6">
+    <div className="w-full h-screen flex items-center justify-center p-6 relative">
+      {/* Blurred overlay when not authenticated */}
+      {(!authenticated || !walletAddress) && showWelcomeOverlay && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/60">
+          <div className="text-center bg-zinc-900/80 border border-zinc-700 rounded-2xl p-12 shadow-2xl relative">
+            {/* X button to close overlay */}
+            <button
+              onClick={() => setShowWelcomeOverlay(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              title="Browse without connecting"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <Image
+              src="/brnrtputer.png"
+              alt="Logo"
+              width={120}
+              height={120}
+              className="mx-auto mb-6"
+            />
+            <h2 className="text-white text-2xl mb-4 font-mono">Welcome to BRNRTPUTER</h2>
+            <p className="text-zinc-400 mb-6">Connect your wallet to start chatting</p>
+            <button 
+              onClick={login}
+              className="px-6 py-3 bg-zinc-800 rounded-lg text-white hover:bg-zinc-700 transition-colors cursor-pointer"
+            >
+              Connect Wallet
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="w-full max-w-7xl h-[94vh] flex bg-black rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 bg-black border-r border-zinc-800 flex flex-col">
@@ -788,7 +800,7 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
               </svg>
               GitHub
             </a>
-            {ready && authenticated && userWalletAddress && (
+            {ready && authenticated && userWalletAddress ? (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 rounded-md text-white text-xs">
                 <span>{abbreviateAddress(userWalletAddress)}</span>
                 <button
@@ -799,6 +811,13 @@ export default function ChatLayout({ currentChatId, walletAddress, chats, onChat
                   <LogOut size={14} className="scale-x-[-1]" />
                 </button>
               </div>
+            ) : (
+              <button
+                onClick={login}
+                className="px-3 py-1.5 bg-zinc-800 rounded-md text-white text-xs hover:bg-zinc-700 transition-colors cursor-pointer"
+              >
+                Connect Wallet
+              </button>
             )}
           </div>
         </div>
